@@ -3,9 +3,10 @@ from . import views
 
 urlpatterns = [
     path('',views.index, name="index"),
-    path('situation',views.answer, name="situation"),
+    path('level',views.answer, name="situation"),
     path('leaderboard',views.leaderboard,name="leaderboard"),
     path('rules',views.rules,name="rules"),
-    path('options',views.options,name="options"),
-    path('subjective',views.subjective,name="subjective")
+    path('logout',views.logout_view,name="logout"),
+    path('rule',views.rule,name="rules_pre"),
+    path('privacypolicy',views.privacy_policy_fb,name="privacypolicy")
 ]

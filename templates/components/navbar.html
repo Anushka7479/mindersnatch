@@ -1,12 +1,31 @@
- <nav>
-    <div class="nav-wrapper">
-      <a href="/" class="brand-logo">Mindersnatch</a>
-      <ul id="nav-mobile" class="right hide-on-med-and-down">
-        <li><a href="rules">Rules</a></li>
-        <li><a href="leaderboard">Leaderboard</a></li>
-        <li><a href="options">Options</a></li>
-        <li><a href="subjective">Subjective</a></li>
-        {% include "components/user.html" %}
-      </ul>
-    </div>
-  </nav>
+<div class="navbar">
+  <div class="navbar-icon nes-pointer">
+    <i class="snes-jp-logo"></i>
+  </div>
+    <ul class="navbar-list">
+      <li>
+        <a href="{% url 'index' %}" class="active">HOME</a>
+      </li>
+      <li>
+        <a href="{% url 'rules' %}">RULE</a>
+      </li>
+      <li><a href="{% url 'leaderboard' %}">LEADERBOARD</a></li>
+      <!-- {%if request.user.is_authenticated%}
+      <li class="logout_button">
+        <a href="/logout">LOGOUT</a>
+      </li>
+      {%endif%} -->
+      <li class="profile nes-pointer" onclick="$('#dialog-dark-rounded')[0].showModal();"><img src="{{ user.image }}" alt=""> {{ user.name }}</li>
+    </ul>
+  </div>
+
+  <dialog class="nes-dialog is-dark is-rounded" id="dialog-dark-rounded">
+    <form method="dialog">
+      <p class="title">Penalty: {{ user.score }}</p>
+      <p>Level: {{ user.level }}</p>
+      <menu class="dialog-menu">
+        <button class="nes-btn">Cancel</button>
+        <a class="nes-btn is-primary" href="/logout">Log out</a>
+      </menu>
+    </form>
+  </dialog>
