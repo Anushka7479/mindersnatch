@@ -1,4 +1,8 @@
 body {
     background-color: black!important;
     font-family: 'Press Start 2P', cursive;
+    background-size: cover;
+    height: 100vh;
+    padding:0;
+    margin:0;
 }

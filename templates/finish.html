@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block stylesheet %}
+<link rel="stylesheet" href="{% static 'finish.css' %}">
+<link rel="stylesheet" href="{% static 'index.css' %}">
+{% endblock %}
+
+{% block content %}
+<div id="fb-root"></div>
+<script async defer crossorigin="anonymous" src="https://connect.facebook.net/en_GB/sdk.js#xfbml=1&version=v6.0&appId=1093110114385829&autoLogAppEvents=1"></script>
+<div class="container">
+    
+    <h1 style="color: white;text-align: center;">Congratulations !! <br />
+      You've finished the game</h1>
+      <div class="Message">
+      <div class="nes-container is-dark with-title" id="error">
+        <p class="title" style="color: red;">Game's Message:</p>
+        <p>your final situation id. is : <span style="color: chartreuse;">{{user.current_sitn}}</span></p>
+        <p style="color:cadetblue">{{messg}}</p>
+      </div>
+    </div>
+    <br><br>
+    <div style="text-align: center;"> Like us on Facebook <br>
+        <div style="text-align: center;"class="fb-like" data-href="https://www.facebook.com/nitdgplug/" data-width="" data-layout="button_count" data-action="like" data-size="large" data-share="false"></div>
+    </div>  
+  
+  <div class="bounce">
+  </div>
+  
+{% endblock %}
+
+</div>
+<i class="icon nes-mario"></i>
+{% block js %}
+<script src="{% static 'finish.js' %}"></script>
+{% endblock %}

@@ -13,6 +13,7 @@ from django.http import HttpResponse
 from decouple import config
 import sys
 
+curr_leaderboard = None
 
 def activeTime(request):
     configuration = Config.objects.all().first()
@@ -26,6 +27,15 @@ def activeTime(request):
     else:
         return 3  # Contest Ended
 
+def isFrozen():
+    return t.now() >= Config.objects.all().first().freeze_time
+
+def updateLeaderboard():
+    global curr_leaderboard
+    if not isFrozen():
+        curr_leaderboard = Player.objects.all().order_by('-level','score','timestamp')
+        return curr_leaderboard
+    return curr_leaderboard
 
 def save_profile(backend, user, response, *args, **kwargs):
     if backend.name == 'google-oauth2':
@@ -60,7 +70,7 @@ def saveLeaderboard(request):
         response = HttpResponse(content_type="text/csv")
         response["Content-Disposition"] = 'attachment; filename="leaderboards.csv"'
         writer = csv.writer(response)
-        for player in Player.objects.order_by("-level","score", "timestamp"):
+        for player in updateLeaderboard():
             writer.writerow([player.user.username, player.score])
         return response
     else:
@@ -73,23 +83,20 @@ def index(request):
         if request.user:
             if request.user.is_authenticated:
                 try : 
+                    frozen = isFrozen()
                     player = Player.objects.get(user=request.user)
-                    print(player)
-                    return render(request, 'index.html', {'user': player})
+                    return render(request, 'index.html', {'user': player, 'frozen' : frozen})
                 except Exception as e:
-                    print (e)
                     return render(request,'404.html',{'message':"Try Logging Again!!"})
         return render(request, 'index.html')
     elif activeTime(request) == 1:
-        # Replace this with contest timer
         if request.user:
             if request.user.is_authenticated:
                 player = Player.objects.get(user=request.user)
                 return render(request, 'timer.html', {'time':config.time, 'user':player})
         return render(request, 'timer.html',{'time':config.time})
     else:
-        # Replace this with ended page
-        return HttpResponse("Contest ended.")
+        return render(request, 'cont_end.html')
 
 
 @login_required(login_url="/")
@@ -116,6 +123,7 @@ def answer(request):
                                         player.level=Situation.objects.get(situation_no=1).level
                                         player.score +=1
                                         player.save()
+                                        updateLeaderboard()
                                         message = option_c.message
                                         return render(request, 'dead.html', {'user': player, 'message': message})
                                     else:
@@ -126,6 +134,7 @@ def answer(request):
                                         sitn = Situation.objects.get(situation_no=option_c.next_sit)
                                         player.level=sitn.level
                                         player.save()
+                                        updateLeaderboard()
                                         if player.level<= tot_level:
                                             if player.level <= cur_level:
                                                 if sitn.sub == True:
@@ -136,7 +145,8 @@ def answer(request):
                                             else:
                                                 return render(request,"pls_wait.html",{'user': player,})
                                         else:
-                                            return HttpResponse("player has won")
+                                            messg=Situation.objects.get(situation_no=player.current_sitn).text
+                                            return render(request,"finish.html",{'user': player,'messg':messg})
                                 except : 
                                     return render(request,'404.html')
                             else:
@@ -153,6 +163,7 @@ def answer(request):
                                     sitn = Situation.objects.get(situation_no=player.current_sitn)
                                     player.level=sitn.level
                                     player.save()
+                                    updateLeaderboard()
                                     if player.level<= tot_level:
                                         if player.level <= cur_level:
                                             if sitn.sub == True:
@@ -164,7 +175,8 @@ def answer(request):
                                         else:
                                             return render(request,"pls_wait.html",{'user': player,})
                                     else:
-                                        return HttpResponse("player has won")
+                                        messg=Situation.objects.get(situation_no=player.current_sitn).text
+                                        return render(request,"finish.html",{'user': player,'messg':messg})
                                 else:
                                     return render(request, 'subjective_level.html', {'user': player, 'sitn': past_sitn, 'timepassed':timer[0].timepassed(), 'status':302,})
                         except : 
@@ -191,15 +203,20 @@ def answer(request):
                 return render(request,"pls_wait.html",{'user': player_check,})
         else:
             #all situations covered
-            return HttpResponse("player has won")
-    else:
+            messg=Situation.objects.get(situation_no=player_check.current_sitn).text
+            return render(request,"finish.html",{'user': player_check,'messg':messg})
+    elif activeTime(request) == 1:
         return render(request, 'timer.html',{'time':config.time})
+    
+    else:
+        return render(request, 'cont_end.html')
+
 
 @login_required(login_url="/")
 def leaderboard(request):
     config = Config.objects.all().first()
-    if activeTime(request) == 2:
-        players = Player.objects.all().order_by('-level','score','timestamp')
+    if activeTime(request) == 2 or activeTime(request) == 3:
+        players = updateLeaderboard()
         context = {'players': players}
         if request.user:
             if request.user.is_authenticated:
@@ -212,7 +229,7 @@ def leaderboard(request):
 @login_required(login_url="/")
 def rules(request):
     config = Config.objects.all().first()
-    if activeTime(request) == 2:
+    if activeTime(request) == 2 or activeTime(request) == 3:
         context = {}
         if request.user:
             if request.user.is_authenticated:
